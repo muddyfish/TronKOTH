@@ -15,12 +15,14 @@ except ImportError:
 curses not found.
 Windows users should install http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses for their python version""")
     has_curses = False
+    time.sleep(0.5)
 else:
     has_curses = True
+#has_curses = False
 
 
 class Game:
-    timeout = 1
+    timeout = 10
     colours = (15, 14, 13, 12, 11, 10, 9, 8)
     non_filled = 2
 
@@ -31,6 +33,9 @@ class Game:
         self.bot_names = [bot.name for bot in self.bots]
         if has_curses:
             self.init_screen()
+        else:
+            for bot in self.bots:
+                print(bot.bot_id, "-", bot.name, bot.log_name)
         print("Game started with {}".format(self.bots))
         while len(self.bots) > 1:
             self.show_board()
@@ -76,8 +81,9 @@ class Game:
 
         threads = []
         pool = ThreadPool(len(self.bots))
-        for bot, position in zip(self.bots, bot_positions):
-            threads.append(pool.apply_async(bot.make_move, args=(self.board, position)))
+        position_dict = {bot.bot_id: pos for bot, pos in zip(self.bots, bot_positions)}
+        for bot in self.bots:
+            threads.append(pool.apply_async(bot.make_move, args=(self.board, position_dict)))
         start = time.time()
         while time.time() - start <= Game.timeout:
             if all(thread.ready() for thread in threads):
@@ -99,6 +105,10 @@ class Game:
                 bot.log.write("\n")
                 rtn.append(None)
         return rtn
+
+    def update_bots(self, bot_positions):
+        position_dict = {bot.bot_id: pos for bot, pos in zip(self.bots, bot_positions)}
+        return [bot.make_move(self.board, position_dict) for bot in self.bots]
 
     def check_dead(self, old_positions: List[Union[Position, None]], moves: List[Union[Position, None]]) -> List[BotSkeleton]:
         bots_left = []
@@ -131,9 +141,7 @@ class Game:
             self.screen.addstr(name)
             self.screen.addstr("\n")
         self.screen.refresh()
-        time.sleep(0.2)
 
     def show_board_no_curses(self):
         print(self.board)
         print("---")
-        time.sleep(0.2)

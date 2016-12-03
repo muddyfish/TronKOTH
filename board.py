@@ -15,18 +15,28 @@ class Board:
         self.y_size = y
         self.size = (x, y)
         self.__board = [[Board.EMPTY for i in range(self.x_size)] for j in range(self.y_size)]
+        self.locked = True
 
     def __repr__(self):
         return "\n".join("".join({0: " "}.get(i, str(i)) for i in row) for row in self.__board)
+
+    def __setattr__(self, key, value):
+        if key == "locked":
+            self.assert_not_bot()
+        super().__setattr__(key, value)
 
     def __getitem__(self, item: Position) -> int:
         return self.__board[item[0]][item[1]]
 
     def __setitem__(self, key: str, value: Any):
-        caller_filename = inspect.stack()[1].filename
+        if self.locked:
+            self.assert_not_bot()
+        self.__board[key[0]][key[1]] = value
+
+    def assert_not_bot(self):
+        caller_filename = inspect.stack()[2].filename
         path = os.path.normpath(caller_filename).split(os.sep)
         assert path[-2] != "bots", "Bots aren't allowed to modify the board directly"
-        self.__board[key[0]][key[1]] = value
 
     def get_random_empty_pos(self) -> Position:
         rtn = (-1, -1)
@@ -42,4 +52,7 @@ class Board:
         return self[pos] == Board.EMPTY
 
     def copy(self) -> List[List[int]]:
-        return copy.deepcopy(self.__board)
+        new_board = copy.deepcopy(self)
+        if self.locked:
+            new_board.locked = False
+        return new_board

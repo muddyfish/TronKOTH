@@ -23,6 +23,9 @@ def load_bots(no_bots, allow_duplicates=False):
         duplicates_required = no_bots - len(names)
         duplicates = [random.choice(names) for _ in range(duplicates_required)]
         names.extend(duplicates)
+    else:
+        random.shuffle(names)
+        names = names[:4]
     bot_modules = import_bots(names)
     bot_classes = [find_bot(bot_module) for bot_module in bot_modules]
     return bot_classes
