@@ -36,7 +36,8 @@ class Board:
     def assert_not_bot(self):
         caller_filename = inspect.stack()[2].filename
         path = os.path.normpath(caller_filename).split(os.sep)
-        assert path[-2] != "bots", "Bots aren't allowed to modify the board directly"
+        assert path[-2] != "bots", "Bots aren't allowed to modify the board directly." \
+                                   "Use board.copy() to get a modifiable one"
 
     def get_random_empty_pos(self) -> Position:
         rtn = (-1, -1)
