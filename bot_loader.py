@@ -2,9 +2,10 @@ import importlib
 import os
 import glob
 import random
+import bots
+from typing import List
 
 import bot_skeleton
-import bots
 
 
 class NotEnoughBotsError(Exception):
@@ -15,7 +16,7 @@ class BotNotFoundError(Exception):
     pass
 
 
-def load_bots(no_bots, allow_duplicates=False):
+def load_bots(no_bots: int, allow_duplicates: bool=False):
     names = get_bot_names()
     if len(names) < no_bots:
         if not allow_duplicates:
@@ -42,11 +43,11 @@ def find_bot(module):
     raise BotNotFoundError("A class in the module that inherits from BotSkeleton was not found in {}".format(module))
 
 
-def import_bots(bot_names):
+def import_bots(bot_names: List[str]):
     return [importlib.import_module("bots."+bot_name, "bots") for bot_name in bot_names]
 
 
-def get_bot_names():
+def get_bot_names() -> List[str]:
     rtn = []
     for name in glob.glob(os.path.join("bots", "*.py")):
         if name.endswith("__init__.py"):

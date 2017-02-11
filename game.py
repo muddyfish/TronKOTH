@@ -1,10 +1,11 @@
-from typing import List, Union
-from typing_hints import Position
+from typing import List, Union, Tuple
+from typing_hints import Position, PositionDict, BotID
 from bot_skeleton import BotSkeleton
 from board import Board
 
 from multiprocessing.pool import ThreadPool
 from multiprocessing.context import TimeoutError
+from io import TextIOWrapper
 import time
 import os
 import traceback
@@ -26,7 +27,7 @@ class Game:
     colours = (15, 14, 13, 12, 11, 10, 9, 8)
     non_filled = 2
 
-    def __init__(self, bots):
+    def __init__(self, bots: List[BotSkeleton]):
         self.board, bot_positions = self.init_board(len(bots))
         self.bots = self.init_bots(bots)
         self.logs = self.init_logs()
@@ -53,11 +54,11 @@ class Game:
         for i, colour in enumerate(Game.colours):
             curses.init_pair(i + 2, colour, colour)
 
-    def init_logs(self):
+    def init_logs(self) -> List[TextIOWrapper]:
         logs = []
         for bot in self.bots:
             new_log = open(os.path.join("logs", bot.log_name+".log"), "w")
-            bot.add_log(new_log)
+            bot.log = new_log
             logs.append(new_log)
         return logs
 
@@ -106,11 +107,9 @@ class Game:
                 rtn.append(None)
         return rtn
 
-    def update_bots(self, bot_positions):
-        position_dict = {bot.bot_id: pos for bot, pos in zip(self.bots, bot_positions)}
-        return [bot.make_move(self.board, position_dict) for bot in self.bots]
-
-    def check_dead(self, old_positions: List[Union[Position, None]], moves: List[Union[Position, None]]) -> List[BotSkeleton]:
+    def check_dead(self,
+                   old_positions: List[Union[Position, None]],
+                   moves: List[Union[Position, None]]) -> Tuple[int, List[BotSkeleton]]:
         bots_left = []
         new_positions = []
         for bot, old_move, new_move in zip(self.bots, old_positions, moves):
@@ -128,7 +127,7 @@ class Game:
 
     def show_board(self):
         if not has_curses:
-            return self.show_board_no_curses()
+            return self._show_board_no_curses()
         self.screen.clear()
         for y in range(self.board.y_size):
             for x in range(self.board.x_size):
@@ -142,6 +141,6 @@ class Game:
             self.screen.addstr("\n")
         self.screen.refresh()
 
-    def show_board_no_curses(self):
+    def _show_board_no_curses(self):
         print(self.board)
         print("---")

@@ -10,14 +10,14 @@ from typing import Any, List
 class Board:
     EMPTY = 0
 
-    def __init__(self, x=30, y=20):
+    def __init__(self, x: int=30, y: int=20):
         self.x_size = x
         self.y_size = y
         self.size = (x, y)
         self.__board = [[Board.EMPTY for i in range(self.x_size)] for j in range(self.y_size)]
         self.locked = True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "\n".join("".join({0: " "}.get(i, str(i)) for i in row) for row in self.__board)
 
     def __setattr__(self, key, value):
@@ -33,7 +33,8 @@ class Board:
             self.assert_not_bot()
         self.__board[key[0]][key[1]] = value
 
-    def assert_not_bot(self):
+    @staticmethod
+    def assert_not_bot():
         caller_filename = inspect.stack()[2].filename
         path = os.path.normpath(caller_filename).split(os.sep)
         assert path[-2] != "bots", "Bots aren't allowed to modify the board directly." \
@@ -52,7 +53,7 @@ class Board:
             return False
         return self[pos] == Board.EMPTY
 
-    def copy(self) -> List[List[int]]:
+    def copy(self) -> "Board":
         new_board = copy.deepcopy(self)
         if self.locked:
             new_board.locked = False
